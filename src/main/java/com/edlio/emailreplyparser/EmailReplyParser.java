@@ -3,6 +3,8 @@ package com.edlio.emailreplyparser;
 public class EmailReplyParser {
 	public static  Email read (String emailText) {
 		EmailParser parser = new EmailParser();
+		if(emailText == null)
+			emailText = "";
 		return parser.parse(emailText);
 	}
 	

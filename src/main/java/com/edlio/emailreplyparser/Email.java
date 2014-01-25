@@ -16,10 +16,10 @@ public class Email {
 		return fragments;
 	}
 	public String getVisibleText() {
-		List<Fragment> visibleFragments = new ArrayList<Fragment>();
+		List<String> visibleFragments = new ArrayList<String>();
 		for(Fragment fragment : fragments) {
 			if(!fragment.isHidden())
-				visibleFragments.add(fragment);
+				visibleFragments.add(fragment.getContent());
 		}
 		return StringUtils.stripEnd(StringUtils.join(visibleFragments,"\n"), null);
 	}

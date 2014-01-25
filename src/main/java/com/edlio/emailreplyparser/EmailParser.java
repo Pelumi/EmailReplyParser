@@ -10,14 +10,14 @@ import org.apache.commons.lang3.StringUtils;
 
 
 public class EmailParser {
-	static final String SIG_REGEX = "/(^--|^__|\\w-$)|(^(\\w+\\s*){1,3} ym morf tneS$)/s";
-	static final String QUOTE_REGEX = "/(>+)$/s";
+	static final String SIG_REGEX = "(^--|^__|\\w-$)|(^(\\w+\\s*){1,3} ym morf tneS$)";
+	static final String QUOTE_REGEX = "(>+)$";
 	
 	private List<String> quoteHeadersRegex = new ArrayList<String>();
 	private List<FragmentDTO> fragments = new ArrayList<FragmentDTO>(); 
 	
 	public EmailParser() {
-		quoteHeadersRegex.add("/^(On\\s(.+)wrote:)$/ms");
+		quoteHeadersRegex.add("^(On\\s(.+)wrote:)");
 		
 	}
 	
@@ -28,9 +28,10 @@ public class EmailParser {
 	public Email parse(String emailText) {
 		emailText.replace("\r\n", "\n");
 		for(String regex : quoteHeadersRegex) {
-			Pattern p = Pattern.compile(regex);
+			Pattern p = Pattern.compile(regex, Pattern.MULTILINE | Pattern.DOTALL);
 			Matcher m = p.matcher(emailText);
 			List<String> matches = new ArrayList<String>();
+			
 			while(m.find()){
 			    matches.add(m.group());
 			}
@@ -41,7 +42,8 @@ public class EmailParser {
 			
 		}
 		FragmentDTO fragment = null;
-		for(String line : new StringBuilder(emailText).reverse().toString().split("\n")) {
+		String[] lines = new StringBuilder(emailText).reverse().toString().split("\n");
+		for(String line : lines) {
 			StringUtils.stripEnd(line, "\n");
 			
 			if(!isSignature(line))
@@ -96,7 +98,9 @@ public class EmailParser {
 		Collections.reverse(fragmentDTOs);
 		for(FragmentDTO f : fragmentDTOs) {
 			
-			fs.add(new Fragment(new StringBuilder(StringUtils.join(f.lines,"\n")).reverse().toString().replaceAll("/^\n/", ""), f.isHidden, f.isSignature, f.isQuoted));
+			String content = new StringBuilder(StringUtils.join(f.lines,"\n")).reverse().toString().replaceAll("/^\n/", "");
+			Fragment fr = new Fragment(content, f.isHidden, f.isSignature, f.isQuoted);
+			fs.add(fr);
 		}
 		return new Email(fs);
 	}
@@ -111,11 +115,15 @@ public class EmailParser {
 	}
 	
 	private boolean isSignature(String line) {
-		return line.matches(SIG_REGEX);
+		Pattern p = Pattern.compile(SIG_REGEX, Pattern.DOTALL);
+		Matcher m = p.matcher(line);
+		return m.find();
 	}
 	
 	private boolean isQuote(String line) {
-		return line.matches(QUOTE_REGEX);
+		Pattern p = Pattern.compile(QUOTE_REGEX, Pattern.DOTALL);
+		Matcher m = p.matcher(line);
+		return m.find();
 	}
 	
 	private boolean isEmpty(FragmentDTO fragment) {
