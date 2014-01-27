@@ -14,7 +14,7 @@ public class Temporary {
  
 			String sCurrentLine;
  
-			br = new BufferedReader(new FileReader("/Users/daniel/Projects/parse/php/EmailReplyParser/tests/Fixtures/email_4.txt"));
+			br = new BufferedReader(new FileReader("Fixtures/email_4.txt"));
  
 			while ((sCurrentLine = br.readLine()) != null) {
 				emailText += sCurrentLine + "\n";

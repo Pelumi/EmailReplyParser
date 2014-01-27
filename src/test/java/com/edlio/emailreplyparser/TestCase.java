@@ -14,7 +14,7 @@ public class TestCase {
  
 			String sCurrentLine;
  
-			br = new BufferedReader(new FileReader("/Users/daniel/Projects/parse/php/EmailReplyParser/tests/Fixtures/" + fileName));
+			br = new BufferedReader(new FileReader("Fixtures/" + fileName));
  
 			while ((sCurrentLine = br.readLine()) != null) {
 				emailText += sCurrentLine + "\n";
