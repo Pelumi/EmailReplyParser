@@ -3,10 +3,10 @@ package com.edlio.emailreplyparser;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.List;
 
-public class Temporary {
-	public static void main(String [] args)
-	{
+public class Debug {
+	public static void main(String [] args) {
 		BufferedReader br = null;
 
 		String emailText = "";
@@ -14,7 +14,7 @@ public class Temporary {
  
 			String sCurrentLine;
  
-			br = new BufferedReader(new FileReader("Fixtures/email_4.txt"));
+			br = new BufferedReader(new FileReader("Fixtures/email_custom_quote_header.txt"));
  
 			while ((sCurrentLine = br.readLine()) != null) {
 				emailText += sCurrentLine + "\n";
@@ -29,7 +29,14 @@ public class Temporary {
 				ex.printStackTrace();
 			}
 		}
-		String parsedEmail = EmailReplyParser.parseReply(emailText);
+		
+		EmailParser parser = new EmailParser();
+		List<String> regex = parser.getQuoteHeadersRegex();
+		regex.add("^(\\d{4}(.+)rta:)");
+		parser.setQuoteHeadersRegex(regex);
+		
+		Email email = parser.parse(emailText);
+		String parsedEmail = email.getVisibleText();
 		System.out.println("================================Original Email Text================================");
 		System.out.println(emailText);
 		System.out.println("===================================================================================\n");

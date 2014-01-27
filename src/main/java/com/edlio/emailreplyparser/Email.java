@@ -15,10 +15,11 @@ public class Email {
 	public List<Fragment> getFragments() {
 		return fragments;
 	}
+	
 	public String getVisibleText() {
 		List<String> visibleFragments = new ArrayList<String>();
-		for(Fragment fragment : fragments) {
-			if(!fragment.isHidden())
+		for (Fragment fragment : fragments) {
+			if (!fragment.isHidden())
 				visibleFragments.add(fragment.getContent());
 		}
 		return StringUtils.stripEnd(StringUtils.join(visibleFragments,"\n"), null);
