@@ -27,38 +27,41 @@ public class EmailParser {
 	
 	public Email parse(String emailText) {
 		emailText.replace("\r\n", "\n");
+		
 		for(String regex : quoteHeadersRegex) {
 			Pattern p = Pattern.compile(regex, Pattern.MULTILINE | Pattern.DOTALL);
 			Matcher m = p.matcher(emailText);
 			List<String> matches = new ArrayList<String>();
 			
-			while(m.find()){
+			while (m.find()){
 			    matches.add(m.group());
 			}
-			if(!matches.isEmpty()) {
+			if (!matches.isEmpty()) {
 				String match = matches.get(0);
 				emailText = emailText.replace(matches.get(0), match.replace("\n", ""));
 			}
-			
 		}
+		
 		FragmentDTO fragment = null;
+		
 		String[] lines = new StringBuilder(emailText).reverse().toString().split("\n");
-		for(String line : lines) {
-			StringUtils.stripEnd(line, "\n");
+		
+		for (String line : lines) {
+			line = StringUtils.stripEnd(line, "\n");
 			
-			if(!isSignature(line))
-				StringUtils.stripStart(line, null);
+			if (!isSignature(line))
+				line = StringUtils.stripStart(line, null);
 			
-			if(fragment != null && line.isEmpty()) {
+			if (fragment != null && line.isEmpty()) {
 				String last = fragment.lines.get(fragment.lines.size()-1);
 				
-				if(isSignature(last)) {
+				if (isSignature(last)) {
 					fragment.isSignature = true;
 					addFragment(fragment);
 					
 					fragment = null;
 				} 
-				else if (isQuoteHeader(line)) {
+				else if (isQuoteHeader(last)) {
 					fragment.isQuoted = true;
 					addFragment(fragment);
 					
@@ -68,8 +71,8 @@ public class EmailParser {
 			
 			boolean isQuoted = isQuote(line);
 			
-			if(fragment == null || !isFragmentLine(fragment, line, isQuoted)) {
-				if(fragment != null)
+			if (fragment == null || !isFragmentLine(fragment, line, isQuoted)) {
+				if (fragment != null)
 					addFragment(fragment);
 				
 				fragment = new FragmentDTO();
@@ -78,25 +81,25 @@ public class EmailParser {
 			}
 			fragment.lines.add(line);	
 		}
-		if(fragment != null)
+		
+		if (fragment != null)
 			addFragment(fragment);
+		
 		return createEmail(fragments);
 	}
 	
 	public List<String> getQuoteHeadersRegex() {
 		return this.quoteHeadersRegex;
-		
 	}
 	
 	public void setQuoteHeadersRegex(List<String> newRegex) {
 		this.quoteHeadersRegex = newRegex;
-			
 	}
 	
 	protected Email createEmail(List<FragmentDTO> fragmentDTOs) {
 		List <Fragment> fs = new ArrayList<Fragment>();
 		Collections.reverse(fragmentDTOs);
-		for(FragmentDTO f : fragmentDTOs) {
+		for (FragmentDTO f : fragmentDTOs) {
 			
 			String content = new StringBuilder(StringUtils.join(f.lines,"\n")).reverse().toString().replaceAll("/^\n/", "");
 			Fragment fr = new Fragment(content, f.isHidden, f.isSignature, f.isQuoted);
@@ -106,18 +109,20 @@ public class EmailParser {
 	}
 		
 	private boolean isQuoteHeader(String line) {
-		for(String qhregex : quoteHeadersRegex) {
-			if(line.matches(qhregex))
+		for (String qhregex : quoteHeadersRegex) {
+			Pattern p = Pattern.compile(qhregex, Pattern.MULTILINE | Pattern.DOTALL);
+			Matcher m = p.matcher(new StringBuilder(line).reverse().toString());
+			if (m.find())
 				return true;
 		}
 		return false;
-		
 	}
 	
 	private boolean isSignature(String line) {
 		Pattern p = Pattern.compile(SIG_REGEX, Pattern.DOTALL);
 		Matcher m = p.matcher(line);
-		return m.find();
+		boolean find = m.find();
+		return find;
 	}
 	
 	private boolean isQuote(String line) {
@@ -135,11 +140,10 @@ public class EmailParser {
 	}
 	
 	private void addFragment(FragmentDTO fragment) {
-		if(fragment.isQuoted || fragment.isSignature || isEmpty(fragment)) 
+		if (fragment.isQuoted || fragment.isSignature || isEmpty(fragment)) 
 			fragment.isHidden = true;
 		
 		fragments.add(fragment);
-
 	}
 	
 }

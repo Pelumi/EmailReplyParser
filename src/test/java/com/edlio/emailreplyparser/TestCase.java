@@ -19,13 +19,16 @@ public class TestCase {
 			while ((sCurrentLine = br.readLine()) != null) {
 				emailText += sCurrentLine + "\n";
 			}
- 
-		} catch (IOException e) {
+		} 
+		catch (IOException e) {
 			e.printStackTrace();
-		} finally {
+		} 
+		finally {
 			try {
-				if (br != null)br.close();
-			} catch (IOException ex) {
+				if (br != null)
+					br.close();
+			} 
+			catch (IOException ex) {
 				ex.printStackTrace();
 			}
 		}

@@ -24,7 +24,7 @@ public class EmailParserTest {
 		List<Fragment> fragments = email.getFragments();
 		
 		assertEquals(3, fragments.size());
-		
+		assertEquals("Hi folks\n\nWhat is the best way to clear a Riak bucket of all key, values after\nrunning a test?\nI am currently using the Java HTTP API.\n", fragments.get(0).getContent());
 		for(Fragment f : fragments) {
 			assertFalse(f.isQuoted());
 		}
@@ -71,9 +71,9 @@ public class EmailParserTest {
 		matcher = pattern.matcher(fragments.get(1).getContent());
 		assertTrue(matcher.find());
 		
-//		pattern = Pattern.compile("On");
-//		matcher = pattern.matcher(fragments.get(2).getContent());
-//		assertTrue(matcher.find());
+		pattern = Pattern.compile("On");
+		matcher = pattern.matcher(fragments.get(2).getContent());
+		assertTrue(matcher.find());
 		
 		pattern = Pattern.compile("^_");
 		matcher = pattern.matcher(fragments.get(4).getContent());
@@ -87,12 +87,14 @@ public class EmailParserTest {
 		
 		assertEquals(6, fragments.size());
 		
+		assertEquals("Hi,", fragments.get(0).getContent());
+		
 		Pattern pattern = Pattern.compile("You can list");
 		Matcher matcher = pattern.matcher(fragments.get(2).getContent());
 		assertTrue(matcher.find());
 		
 		pattern = Pattern.compile("On");
-		matcher = pattern.matcher(fragments.get(0).getContent());
+		matcher = pattern.matcher(fragments.get(1).getContent());
 		assertTrue(matcher.find());
 		
 		pattern = Pattern.compile(">");
@@ -113,9 +115,9 @@ public class EmailParserTest {
 		Matcher matcher = pattern.matcher(fragments.get(0).getContent());
 		assertTrue(matcher.find());
 		
-//		pattern = Pattern.compile("On");
-//		matcher = pattern.matcher(fragments.get(1).getContent());
-//		assertTrue(matcher.find());
+		pattern = Pattern.compile("On");
+		matcher = pattern.matcher(fragments.get(1).getContent());
+		assertTrue(matcher.find());
 		
 		pattern = Pattern.compile("Loader");
 		matcher = pattern.matcher(fragments.get(1).getContent());
@@ -135,11 +137,6 @@ public class EmailParserTest {
 	
 	@Test
 	public void testComplexBodyWithOnlyOneFragment() {
-		/*
-		 * $email = $this->parser->parse($this->getFixtures('email_5.txt'));
-
-        $this->assertCount(1, $email->getFragments());
-		 */
 		Email email = new EmailParser().parse(TestCase.getFixtures("email_5.txt"));
 		List<Fragment> fragments = email.getFragments();
 		
@@ -155,9 +152,9 @@ public class EmailParserTest {
 		Matcher matcher = pattern.matcher(fragments.get(0).getContent());
 		assertTrue(matcher.find());
 		
-//		pattern = Pattern.compile("On");
-//		matcher = pattern.matcher(fragments.get(1).getContent());
-//		assertTrue(matcher.find());
+		pattern = Pattern.compile("On");
+		matcher = pattern.matcher(fragments.get(1).getContent());
+		assertTrue(matcher.find());
 		
 		pattern = Pattern.compile("Was this");
 		matcher = pattern.matcher(fragments.get(1).getContent());
@@ -170,8 +167,8 @@ public class EmailParserTest {
 		List<Fragment> fragments = email.getFragments();
 		
 		List<String> visibleFragments = new ArrayList<String>();
-		for(Fragment fragment : fragments) {
-			if(!fragment.isHidden())
+		for (Fragment fragment : fragments) {
+			if (!fragment.isHidden())
 				visibleFragments.add(fragment.getContent());
 		}
 		assertEquals(StringUtils.stripEnd(StringUtils.join(visibleFragments,"\n"), null), email.getVisibleText());
@@ -207,31 +204,31 @@ public class EmailParserTest {
 		Matcher matcher = pattern.matcher(fragments.get(0).getContent());
 		assertTrue(matcher.find());
 		
-//		pattern = Pattern.compile("On Oct 1, 2012");
-//		matcher = pattern.matcher(fragments.get(1).getContent());
-//		assertTrue(matcher.find());
+		pattern = Pattern.compile("On Oct 1, 2012");
+		matcher = pattern.matcher(fragments.get(1).getContent());
+		assertTrue(matcher.find());
 	}
 	
 	@Test
 	public void testCustomQuoteHeader() {
-		/*
-		 * 
-		 *       $regex   = $this->parser->getQuoteHeadersRegex();
-        $regex[] = '/^(\d{4}(.+)rta:)$/ms';
-        $this->parser->setQuoteHeadersRegex($regex);
-
-        $email = $this->parser->parse($this->getFixtures('email_custom_quote_header.txt'));
-
-        $this->assertEquals('Thank you!', $email->getVisibleText());
-		 */
-		
 		EmailParser parser = new EmailParser();
 		List<String> regex = parser.getQuoteHeadersRegex();
-		regex.add("^(\\d{4}(.+)rta:)$");
+		regex.add("^(\\d{4}(.+)rta:)");
 		parser.setQuoteHeadersRegex(regex);
 		
 		Email email = parser.parse(TestCase.getFixtures("email_custom_quote_header.txt"));
-		//assertEquals("Thank you!", email.getVisibleText());
+		assertEquals("Thank you!", email.getVisibleText());
+	}
+	
+	@Test
+	public void testCustomQuoteHeader2() {
+		EmailParser parser = new EmailParser();
+		List<String> regex = parser.getQuoteHeadersRegex();
+		regex.add("^(From\\: .+ .+test\\@webdomain\\.com.+)");
+		parser.setQuoteHeadersRegex(regex);
+		
+		Email email = parser.parse(TestCase.getFixtures("email_customer_quote_header_2.txt"));
+		assertEquals("Thank you very much.", email.getVisibleText());
 	}
 
 }
