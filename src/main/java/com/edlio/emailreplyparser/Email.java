@@ -25,4 +25,13 @@ public class Email {
 		return StringUtils.stripEnd(StringUtils.join(visibleFragments,"\n"), null);
 	}
 	
+	public String getHiddenText() {
+		List<String> hiddenFragments = new ArrayList<String>();
+		for (Fragment fragment : fragments) {
+			if (fragment.isHidden())
+				hiddenFragments.add(fragment.getContent());
+		}
+		return StringUtils.stripEnd(StringUtils.join(hiddenFragments,"\n"), null);
+	}
+	
 }
