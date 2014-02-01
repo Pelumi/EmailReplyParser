@@ -15,12 +15,9 @@ import org.junit.Test;
 
 public class EmailParserTest {
 
-	@BeforeClass
-	public static void setUp() {
-	}
 	@Test
 	public void testReadsSimpleBody() {
-		Email email = new EmailParser().parse(TestCase.getFixtures("email_1.txt"));
+		Email email = new EmailParser().parse(FixtureGetter.getFixture("email_1.txt"));
 		List<Fragment> fragments = email.getFragments();
 		
 		assertEquals(3, fragments.size());
@@ -38,9 +35,10 @@ public class EmailParserTest {
 		
 		assertEquals("-Abhishek Kona\n\n", fragments.get(1).getContent());
 	}
+
 	@Test
 	public void testReadsTopPost() {
-		Email email = new EmailParser().parse(TestCase.getFixtures("email_3.txt"));
+		Email email = new EmailParser().parse(FixtureGetter.getFixture("email_3.txt"));
 		List<Fragment> fragments = email.getFragments();
 		
 		assertEquals(5, fragments.size());
@@ -82,7 +80,7 @@ public class EmailParserTest {
 	
 	@Test
 	public void testReadsBottomPost() {
-		Email email = new EmailParser().parse(TestCase.getFixtures("email_2.txt"));
+		Email email = new EmailParser().parse(FixtureGetter.getFixture("email_2.txt"));
 		List<Fragment> fragments = email.getFragments();
 		
 		assertEquals(6, fragments.size());
@@ -108,7 +106,7 @@ public class EmailParserTest {
 	
 	@Test
 	public void testRecognizesDateStringAboveQuote() {
-		Email email = new EmailParser().parse(TestCase.getFixtures("email_4.txt"));
+		Email email = new EmailParser().parse(FixtureGetter.getFixture("email_4.txt"));
 		List<Fragment> fragments = email.getFragments();
 		
 		Pattern pattern = Pattern.compile("Awesome");
@@ -137,7 +135,7 @@ public class EmailParserTest {
 	
 	@Test
 	public void testComplexBodyWithOnlyOneFragment() {
-		Email email = new EmailParser().parse(TestCase.getFixtures("email_5.txt"));
+		Email email = new EmailParser().parse(FixtureGetter.getFixture("email_5.txt"));
 		List<Fragment> fragments = email.getFragments();
 		
 		assertEquals(1, fragments.size());
@@ -145,7 +143,7 @@ public class EmailParserTest {
 	
 	@Test
 	public void testDealsWithMultilineReplyHeaders() {
-		Email email = new EmailParser().parse(TestCase.getFixtures("email_6.txt"));
+		Email email = new EmailParser().parse(FixtureGetter.getFixture("email_6.txt"));
 		List<Fragment> fragments = email.getFragments();
 		
 		Pattern pattern = Pattern.compile("I get");
@@ -163,7 +161,7 @@ public class EmailParserTest {
 	
 	@Test
 	public void testGetVisibleTextReturnsOnlyVisibleFragments() {
-		Email email = new EmailParser().parse(TestCase.getFixtures("email_2_1.txt"));
+		Email email = new EmailParser().parse(FixtureGetter.getFixture("email_2_1.txt"));
 		List<Fragment> fragments = email.getFragments();
 		
 		List<String> visibleFragments = new ArrayList<String>();
@@ -176,7 +174,7 @@ public class EmailParserTest {
 	
 	@Test
 	public void testReadsEmailWithCorrectSignature() {
-		Email email = new EmailParser().parse(TestCase.getFixtures("correct_sig.txt"));
+		Email email = new EmailParser().parse(FixtureGetter.getFixture("correct_sig.txt"));
 		List<Fragment> fragments = email.getFragments();
 		
 		assertEquals(2, fragments.size());
@@ -197,7 +195,7 @@ public class EmailParserTest {
 	
 	@Test
 	public void testOneIsNotOn() {
-		Email email = new EmailParser().parse(TestCase.getFixtures("email_one_is_not_on.txt"));
+		Email email = new EmailParser().parse(FixtureGetter.getFixture("email_one_is_not_on.txt"));
 		List<Fragment> fragments = email.getFragments();
 		
 		Pattern pattern = Pattern.compile("One outstanding question");
@@ -216,7 +214,7 @@ public class EmailParserTest {
 		regex.add("^(\\d{4}(.+)rta:)");
 		parser.setQuoteHeadersRegex(regex);
 		
-		Email email = parser.parse(TestCase.getFixtures("email_custom_quote_header.txt"));
+		Email email = parser.parse(FixtureGetter.getFixture("email_custom_quote_header.txt"));
 		assertEquals("Thank you!", email.getVisibleText());
 	}
 	
@@ -227,8 +225,7 @@ public class EmailParserTest {
 		regex.add("^(From\\: .+ .+test\\@webdomain\\.com.+)");
 		parser.setQuoteHeadersRegex(regex);
 		
-		Email email = parser.parse(TestCase.getFixtures("email_customer_quote_header_2.txt"));
+		Email email = parser.parse(FixtureGetter.getFixture("email_customer_quote_header_2.txt"));
 		assertEquals("Thank you very much.", email.getVisibleText());
 	}
-
 }

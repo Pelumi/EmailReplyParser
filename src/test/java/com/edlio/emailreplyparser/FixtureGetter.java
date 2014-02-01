@@ -4,9 +4,9 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 
-public class TestCase {
+public class FixtureGetter {
 
-	static String getFixtures(String fileName) {
+	static String getFixture(String fileName) {
 		BufferedReader br = null;
 
 		String emailText = "";
@@ -14,16 +14,16 @@ public class TestCase {
  
 			String sCurrentLine;
  
-			br = new BufferedReader(new FileReader("Fixtures/" + fileName));
+			br = new BufferedReader(new FileReader("src/test/fixtures/" + fileName));
  
 			while ((sCurrentLine = br.readLine()) != null) {
 				emailText += sCurrentLine + "\n";
 			}
-		} 
-		catch (IOException e) {
+
+		} catch (IOException e) {
 			e.printStackTrace();
-		} 
-		finally {
+
+		} finally {
 			try {
 				if (br != null)
 					br.close();
@@ -32,6 +32,7 @@ public class TestCase {
 				ex.printStackTrace();
 			}
 		}
+
 		return emailText;
 	}
 }
