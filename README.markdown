@@ -32,6 +32,7 @@ class exposes two methods:
 
 * `getFragments()`: returns a list of fragments;
 * `getVisibleText()`: returns a string which represents the content considered as "visible".
+* `getHiddenText()`: returns a string which represents the content considered as "hidden".
 
 The `Fragment` represents a part of the full email content, and has the following API:
 
