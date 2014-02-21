@@ -210,9 +210,7 @@ public class EmailParserTest {
 	@Test
 	public void testCustomQuoteHeader() {
 		EmailParser parser = new EmailParser();
-		List<String> regex = parser.getQuoteHeadersRegex();
-		regex.add("^(\\d{4}(.+)rta:)");
-		parser.setQuoteHeadersRegex(regex);
+		parser.getQuoteHeadersRegex().add("^(\\d{4}(.+)rta:)");
 		
 		Email email = parser.parse(FixtureGetter.getFixture("email_custom_quote_header.txt"));
 		assertEquals("Thank you!", email.getVisibleText());
@@ -221,9 +219,7 @@ public class EmailParserTest {
 	@Test
 	public void testCustomQuoteHeader2() {
 		EmailParser parser = new EmailParser();
-		List<String> regex = parser.getQuoteHeadersRegex();
-		regex.add("^(From\\: .+ .+test\\@webdomain\\.com.+)");
-		parser.setQuoteHeadersRegex(regex);
+		parser.getQuoteHeadersRegex().add("^(From\\: .+ .+test\\@webdomain\\.com.+)");
 		
 		Email email = parser.parse(FixtureGetter.getFixture("email_customer_quote_header_2.txt"));
 		assertEquals("Thank you very much.", email.getVisibleText());

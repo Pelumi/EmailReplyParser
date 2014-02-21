@@ -18,9 +18,15 @@ public class EmailParser {
 	
 	public EmailParser() {
 		quoteHeadersRegex.add("^(On\\s(.+)wrote:)");
-		
+		quoteHeadersRegex.add("There's been a reply to[<]?.*[>]?\\s?ticket[<]?.*[>]?\\s?\\d{3,4}-\\d{6}-\\d{2}[<]?.*[>]?\\s?for");
+		quoteHeadersRegex.add("To:[^\\n]+\\n?([^\\n]+\\n?){0,2}Subject:\\s?\\[Edlio Support\\][^\\n]+\\n?([^\\n]+\\n?){0,2}From:[^\\n]+");
+		quoteHeadersRegex.add("To:[^\\n]+\\n?([^\\n]+\\n?){0,2}From:[^\\n]+\\n?([^\\n]+\\n?){0,2}Subject:\\s?\\[Edlio Support\\][^\\n]+");
+		quoteHeadersRegex.add("From:[^\\n]+\\n?([^\\n]+\\n?){0,2}To:[^\\n]+\\n?([^\\n]+\\n?){0,2}Subject:\\s?\\[Edlio Support\\][^\\n]+");
+		quoteHeadersRegex.add("From:[^\\n]+\\n?([^\\n]+\\n?){0,2}Subject:\\s?\\[Edlio Support\\][^\\n]+\\n?([^\\n]+\\n?){0,2}To:[^\\n]+");
+		quoteHeadersRegex.add("Subject:\\s?\\[Edlio Support\\][^\\n]+\\n?([^\\n]+\\n?){0,2}From:[^\\n]+\\n?([^\\n]+\\n?){0,2}To:[^\\n]+");
+		quoteHeadersRegex.add("Subject:\\s?\\[Edlio Support\\][^\\n]+\\n?([^\\n]+\\n?){0,2}To:[^\\n]+\\n?([^\\n]+\\n?){0,2}From:[^\\n]+");
 	}
-	
+		
 	public String read () {
 		return QUOTE_REGEX;
 	}
