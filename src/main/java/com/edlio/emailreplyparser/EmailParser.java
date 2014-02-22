@@ -23,8 +23,8 @@ public class EmailParser {
 		quoteHeadersRegex.add("To:[^\\n]+\\n?([^\\n]+\\n?){0,2}From:[^\\n]+\\n?([^\\n]+\\n?){0,2}Subject:\\s?\\[Edlio Support\\][^\\n]+");
 		quoteHeadersRegex.add("From:[^\\n]+\\n?([^\\n]+\\n?){0,2}To:[^\\n]+\\n?([^\\n]+\\n?){0,2}Subject:\\s?\\[Edlio Support\\][^\\n]+");
 		quoteHeadersRegex.add("From:[^\\n]+\\n?([^\\n]+\\n?){0,2}Subject:\\s?\\[Edlio Support\\][^\\n]+\\n?([^\\n]+\\n?){0,2}To:[^\\n]+");
-		quoteHeadersRegex.add("Subject:\\s?\\[Edlio Support\\][^\\n]+\\n?([^\\n]+\\n?){0,2}From:[^\\n]+\\n?([^\\n]+\\n?){0,2}To:[^\\n]+");
-		quoteHeadersRegex.add("Subject:\\s?\\[Edlio Support\\][^\\n]+\\n?([^\\n]+\\n?){0,2}To:[^\\n]+\\n?([^\\n]+\\n?){0,2}From:[^\\n]+");
+		quoteHeadersRegex.add("Date:[^\\n]+\\n?([^\\n]+\\n?){0,2}Subject:\\s?\\[Edlio Support\\][^\\n]+");
+		
 	}
 		
 	public String read () {
