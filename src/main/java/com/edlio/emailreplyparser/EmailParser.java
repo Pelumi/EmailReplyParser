@@ -34,7 +34,6 @@ public class EmailParser {
 		quoteHeadersRegex.add("From:[^\\n]+\\n?([^\\n]+\\n?){0,2}To:[^\\n]+\\n?([^\\n]+\\n?){0,2}Subject:[^\\n]+");
 		quoteHeadersRegex.add("To:[^\\n]+\\n?([^\\n]+\\n?){0,2}From:[^\\n]+\\n?([^\\n]+\\n?){0,2}Subject:[^\\n]+");
 		quoteHeadersRegex.add("Date:[^\\n]+\\n?([^\\n]+\\n?){0,2}Subject:[^\\n]+");
-		
 	}
 	
 	private class regexCheck implements Callable <List<String>> {
@@ -72,6 +71,7 @@ public class EmailParser {
 				matches = checkResult.get(timeout, TimeUnit.MILLISECONDS);
 			} catch (TimeoutException ex) {
 				checkResult.cancel(true);
+				System.out.println("timeout");
 				timedoutRegexes.add(regex);
 			} catch (InterruptedException e) {
 				checkResult.cancel(true);

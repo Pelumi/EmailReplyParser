@@ -30,7 +30,7 @@ public class Main {
 		}
 
 		EmailParser parser = new EmailParser();
-		parser.setTimeout(8000L);
+		parser.setTimeout(10000L);
 
 		Email email = parser.parse(emailText);
 		String parsedEmail = email.getVisibleText();
