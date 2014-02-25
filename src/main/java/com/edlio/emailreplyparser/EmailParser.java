@@ -1,12 +1,22 @@
 package com.edlio.emailreplyparser;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.commons.lang3.StringUtils;
+
 
 
 public class EmailParser {
@@ -14,38 +24,70 @@ public class EmailParser {
 	static final String QUOTE_REGEX = "(>+)$";
 	
 	private List<String> quoteHeadersRegex = new ArrayList<String>();
-	private List<FragmentDTO> fragments = new ArrayList<FragmentDTO>(); 
+	private List<FragmentDTO> fragments = new ArrayList<FragmentDTO>();
+	private Collection<String> timedoutRegexes = new LinkedList<String>();
+	private ExecutorService regexCheckService = null;
+	private long timeout = 10000L;
 	
 	public EmailParser() {
 		quoteHeadersRegex.add("^(On\\s(.+)wrote:)");
-		quoteHeadersRegex.add("There's been a reply to[<]?.*[>]?\\s?ticket[<]?.*[>]?\\s?\\d{3,4}-\\d{6}-\\d{2}[<]?.*[>]?\\s?for");
-		quoteHeadersRegex.add("To:[^\\n]+\\n?([^\\n]+\\n?){0,2}Subject:\\s?\\[Edlio Support\\][^\\n]+\\n?([^\\n]+\\n?){0,2}From:[^\\n]+");
-		quoteHeadersRegex.add("To:[^\\n]+\\n?([^\\n]+\\n?){0,2}From:[^\\n]+\\n?([^\\n]+\\n?){0,2}Subject:\\s?\\[Edlio Support\\][^\\n]+");
-		quoteHeadersRegex.add("From:[^\\n]+\\n?([^\\n]+\\n?){0,2}To:[^\\n]+\\n?([^\\n]+\\n?){0,2}Subject:\\s?\\[Edlio Support\\][^\\n]+");
-		quoteHeadersRegex.add("From:[^\\n]+\\n?([^\\n]+\\n?){0,2}Subject:\\s?\\[Edlio Support\\][^\\n]+\\n?([^\\n]+\\n?){0,2}To:[^\\n]+");
-		quoteHeadersRegex.add("Date:[^\\n]+\\n?([^\\n]+\\n?){0,2}Subject:\\s?\\[Edlio Support\\][^\\n]+");
+		quoteHeadersRegex.add("From:[^\\n]+\\n?([^\\n]+\\n?){0,2}To:[^\\n]+\\n?([^\\n]+\\n?){0,2}Subject:[^\\n]+");
+		quoteHeadersRegex.add("To:[^\\n]+\\n?([^\\n]+\\n?){0,2}From:[^\\n]+\\n?([^\\n]+\\n?){0,2}Subject:[^\\n]+");
+		quoteHeadersRegex.add("Date:[^\\n]+\\n?([^\\n]+\\n?){0,2}Subject:[^\\n]+");
 		
 	}
-		
+	
+	private class regexCheck implements Callable <List<String>> {
+		Pattern p;
+		String emailText;
+		public regexCheck(String regex, String emailText) {
+			p =Pattern.compile(regex, Pattern.MULTILINE | Pattern.DOTALL);
+			this.emailText = emailText;
+		}
+
+		public List<String> call() throws Exception {
+			Matcher m = p.matcher(emailText);
+			List<String> matches = new ArrayList<String>();
+			while (m.find()){
+			    matches.add(m.group());
+			}
+			return matches;
+		}
+	
+	}
+	
 	public String read () {
 		return QUOTE_REGEX;
 	}
 	
 	public Email parse(String emailText) {
 		emailText.replace("\r\n", "\n");
-		
+		regexCheckService = Executors.newCachedThreadPool();
 		for(String regex : quoteHeadersRegex) {
-			Pattern p = Pattern.compile(regex, Pattern.MULTILINE | Pattern.DOTALL);
-			Matcher m = p.matcher(emailText);
 			List<String> matches = new ArrayList<String>();
+			Future<List<String>> checkResult = null;
+			checkResult = regexCheckService.submit(new regexCheck(regex, emailText));
 			
-			while (m.find()){
-			    matches.add(m.group());
+			try {
+				matches = checkResult.get(timeout, TimeUnit.MILLISECONDS);
+			} catch (TimeoutException ex) {
+				checkResult.cancel(true);
+				timedoutRegexes.add(regex);
+			} catch (InterruptedException e) {
+				checkResult.cancel(true);
+				timedoutRegexes.add(regex);
+			} catch (ExecutionException e) {
+				checkResult.cancel(true);
+				timedoutRegexes.add(regex);
+			} finally {
+				if(checkResult.isDone() && !checkResult.isCancelled()) {
+					if (!matches.isEmpty()) {
+						String match = matches.get(0);
+						emailText = emailText.replace(matches.get(0), match.replace("\n", ""));
+					}
+				}
 			}
-			if (!matches.isEmpty()) {
-				String match = matches.get(0);
-				emailText = emailText.replace(matches.get(0), match.replace("\n", ""));
-			}
+			
 		}
 		
 		FragmentDTO fragment = null;
@@ -102,6 +144,18 @@ public class EmailParser {
 		this.quoteHeadersRegex = newRegex;
 	}
 	
+	public void setTimeout(long timeout) {
+		this.timeout = timeout;
+	}
+	
+	public long getTimeout() {
+		return this.timeout;
+	}
+	
+	public Collection<String> getTimedoutRegexes() {
+		return timedoutRegexes;
+	}
+	
 	protected Email createEmail(List<FragmentDTO> fragmentDTOs) {
 		List <Fragment> fs = new ArrayList<Fragment>();
 		Collections.reverse(fragmentDTOs);
@@ -151,5 +205,6 @@ public class EmailParser {
 		
 		fragments.add(fragment);
 	}
+	
 	
 }
