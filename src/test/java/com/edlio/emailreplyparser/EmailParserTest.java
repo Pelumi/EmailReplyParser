@@ -10,7 +10,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.commons.lang3.StringUtils;
-import org.junit.BeforeClass;
 import org.junit.Test;
 
 public class EmailParserTest {
@@ -155,7 +154,7 @@ public class EmailParserTest {
 		assertTrue(matcher.find());
 		
 		pattern = Pattern.compile("Was this");
-		matcher = pattern.matcher(fragments.get(1).getContent());
+		matcher = pattern.matcher(fragments.get(2).getContent());
 		assertTrue(matcher.find());
 	}
 	
@@ -224,4 +223,73 @@ public class EmailParserTest {
 		Email email = parser.parse(FixtureGetter.getFixture("email_customer_quote_header_2.txt"));
 		assertEquals("Thank you very much.", email.getVisibleText());
 	}
+	
+	@Test
+	public void testAbnormalQuoteHeader1() {
+		EmailParser parser = new EmailParser();
+		
+		Email email = parser.parse(FixtureGetter.getFixture("email_abnormal_quote_header_1.txt"));
+		assertEquals("Thank you kindly!", email.getVisibleText());
+	}
+	
+	@Test
+	public void testAbnormalQuoteHeader2() {
+		EmailParser parser = new EmailParser();
+		
+		Email email = parser.parse(FixtureGetter.getFixture("email_abnormal_quote_header_2.txt"));
+		assertEquals("Thank you very much for your email!", email.getVisibleText());
+	}
+	
+	@Test
+	public void testAbnormalQuoteHeader3() {
+		EmailParser parser = new EmailParser();
+		
+		Email email = parser.parse(FixtureGetter.getFixture("email_abnormal_quote_header_3.txt"));
+		assertEquals(
+				"Hi Daniel,\n" + 
+				"\n" + 
+				"\n" + 
+				"Thank you very much for your email.\n" + 
+				"\n" + 
+				"Sincerely,\n" + 
+				"Homer Simpson\n" + 
+				"Nuclear Safety Inspector\n" + 
+				"\n" + 
+				"nuclear power plant, sector 7-G", 
+				email.getVisibleText());
+	}
+	
+	@Test
+	public void testAbnormalQuoteHeader4() {
+		EmailParser parser = new EmailParser();
+		
+		Email email = parser.parse(FixtureGetter.getFixture("email_abnormal_quote_header_4.txt"));
+		assertEquals(
+				"From: Homer Simpson\n" + 
+				"To: Support\n" + 
+				"\n" + 
+				"Thank you very much for your email!", 
+				email.getVisibleText());
+	}
+	
+	@Test
+	public void testAbnormalQuoteHeader5() {
+		EmailParser parser = new EmailParser();
+		
+		Email email = parser.parse(FixtureGetter.getFixture("email_abnormal_quote_header_5.txt"));
+		assertEquals(
+				"Hello from outlook.com!", 
+				email.getVisibleText());
+	}
+
+	@Test
+	public void testAbnormalQuoteHeaderLong() {
+		EmailParser parser = new EmailParser();
+		
+		Email email = parser.parse(FixtureGetter.getFixture("email_abnormal_quote_header_long.txt"));
+		assertEquals(
+				"*Caution* This is a really long email.",
+				email.getVisibleText());
+	}
+
 }
