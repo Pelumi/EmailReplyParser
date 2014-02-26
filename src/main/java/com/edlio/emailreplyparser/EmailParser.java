@@ -1,17 +1,11 @@
 package com.edlio.emailreplyparser;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -27,8 +21,6 @@ public class EmailParser {
 	private List<String> quoteHeadersRegex = new ArrayList<String>();
 	private List<FragmentDTO> fragments = new ArrayList<FragmentDTO>();
 	private Collection<String> timedoutRegexes = new LinkedList<String>();
-	private ExecutorService regexCheckService = null;
-	private long timeout = 5000L;
 	
 	public EmailParser() {
 		compiledQuoteHeaderPatterns = new ArrayList<Pattern>();
@@ -44,22 +36,6 @@ public class EmailParser {
 			compiledQuoteHeaderPatterns.add(Pattern.compile(regex, Pattern.MULTILINE | Pattern.DOTALL));
 		}
 		
-	}
-	private class regexCheck implements Callable <Boolean> {
-		Pattern p;
-		String content;
-		public regexCheck(Pattern p, String content) {
-			this.p = p;
-			this.content = content;
-		}
-
-		public Boolean call() throws Exception {
-			if (p.matcher(content).find()) {
-				return true;
-			}
-			return false;
-		}
-	
 	}
 	
 	public String read () {
@@ -90,12 +66,6 @@ public class EmailParser {
 					fragment = null;
 				} 
 				else if (isMultiLineQuoteHeaders(paragraph)) {
-					fragment.isQuoted = true;
-					addFragment(fragment);
-					
-					fragment = null;
-				}
-				else if (isQuoteHeader(last)) {
 					fragment.isQuoted = true;
 					addFragment(fragment);
 					
@@ -134,14 +104,6 @@ public class EmailParser {
 		this.quoteHeadersRegex = newRegex;
 	}
 	
-	public void setTimeout(long timeout) {
-		this.timeout = timeout;
-	}
-	
-	public long getTimeout() {
-		return this.timeout;
-	}
-	
 	public Collection<String> getTimedoutRegexes() {
 		return timedoutRegexes;
 	}
@@ -156,34 +118,6 @@ public class EmailParser {
 			fs.add(fr);
 		}
 		return new Email(fs);
-	}
-		
-	private boolean isQuoteHeader(String line) {
-		regexCheckService = Executors.newCachedThreadPool();
-		for(Pattern p : compiledQuoteHeaderPatterns) {
-			Boolean matches;
-			Future<Boolean> checkResult = null;
-			checkResult = regexCheckService.submit(new regexCheck(p, new StringBuilder(line).reverse().toString()));
-			
-			try {
-				matches = checkResult.get(timeout, TimeUnit.MILLISECONDS);
-				
-			} catch (TimeoutException ex) {
-				checkResult.cancel(true);
-				return false;
-			} catch (InterruptedException e) {
-				checkResult.cancel(true);
-				return false;
-			} catch (ExecutionException e) {
-				checkResult.cancel(true);
-				return false;
-			} 
-			if (matches) {
-				return matches;
-			}
-			
-		}
-		return false;
 	}
 	
 	private boolean isSignature(String line) {
@@ -204,7 +138,7 @@ public class EmailParser {
 	}
 	
 	private boolean isFragmentLine(FragmentDTO fragment, String line, boolean isQuoted) {
-		return fragment.isQuoted == isQuoted || (fragment.isQuoted && (isQuoteHeader(line) || line.isEmpty()));
+		return fragment.isQuoted == isQuoted || (fragment.isQuoted && (isMultiLineQuoteHeaders(Arrays.asList(line)) || line.isEmpty()));
 	}
 	
 	private void addFragment(FragmentDTO fragment) {
@@ -217,31 +151,16 @@ public class EmailParser {
 	private boolean isMultiLineQuoteHeaders(List<String> paragraph) {
 		if (paragraph.size() > 6)
 			return false;
+		for (String line : paragraph) {
+			if (line.length() > 200)
+				return false;
+		}
 		
 		String content = new StringBuilder(StringUtils.join(paragraph,"\n")).reverse().toString();
-		regexCheckService = Executors.newCachedThreadPool();
 		for(Pattern p : compiledQuoteHeaderPatterns) {
-			Boolean matches;
-			Future<Boolean> checkResult = null;
-			checkResult = regexCheckService.submit(new regexCheck(p, content));
-			
-			try {
-				matches = checkResult.get(timeout, TimeUnit.MILLISECONDS);
-				
-			} catch (TimeoutException ex) {
-				checkResult.cancel(true);
-				return false;
-			} catch (InterruptedException e) {
-				checkResult.cancel(true);
-				return false;
-			} catch (ExecutionException e) {
-				checkResult.cancel(true);
-				return false;
-			} 
-			if (matches) {
-				return matches;
+			if (p.matcher(content).find()) {
+				return true;
 			}
-			
 		}
 		
 		return false;
