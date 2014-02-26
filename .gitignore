@@ -5,3 +5,4 @@ target/
 .settings/
 
 /bin
+src/main/java/com/edlio/emailreplyparser/Main.java
