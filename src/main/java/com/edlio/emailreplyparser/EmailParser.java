@@ -22,35 +22,42 @@ import org.apache.commons.lang3.StringUtils;
 public class EmailParser {
 	static final String SIG_REGEX = "(^--|^__|\\w-$)|(^(\\w+\\s*){1,3} ym morf tneS$)";
 	static final String QUOTE_REGEX = "(>+)$";
+	private static List<Pattern> compiledQuoteHeaderPatterns;
 	
 	private List<String> quoteHeadersRegex = new ArrayList<String>();
 	private List<FragmentDTO> fragments = new ArrayList<FragmentDTO>();
 	private Collection<String> timedoutRegexes = new LinkedList<String>();
 	private ExecutorService regexCheckService = null;
-	private long timeout = 10000L;
+	private long timeout = 5000L;
 	
 	public EmailParser() {
-		quoteHeadersRegex.add("^(On\\s(.+)wrote:)");
+		compiledQuoteHeaderPatterns = new ArrayList<Pattern>();
+		quoteHeadersRegex.add("^(On\\s(.{1,500})wrote:)");
 		quoteHeadersRegex.add("From:[^\\n]+\\n?([^\\n]+\\n?){0,2}To:[^\\n]+\\n?([^\\n]+\\n?){0,2}Subject:[^\\n]+");
 		quoteHeadersRegex.add("To:[^\\n]+\\n?([^\\n]+\\n?){0,2}From:[^\\n]+\\n?([^\\n]+\\n?){0,2}Subject:[^\\n]+");
 		quoteHeadersRegex.add("Date:[^\\n]+\\n?([^\\n]+\\n?){0,2}Subject:[^\\n]+");
+		
 	}
 	
-	private class regexCheck implements Callable <List<String>> {
+	public void compileQuoteHeaderRegexes() {
+		for (String regex : quoteHeadersRegex) {
+			compiledQuoteHeaderPatterns.add(Pattern.compile(regex, Pattern.MULTILINE | Pattern.DOTALL));
+		}
+		
+	}
+	private class regexCheck implements Callable <Boolean> {
 		Pattern p;
-		String emailText;
-		public regexCheck(String regex, String emailText) {
-			p =Pattern.compile(regex, Pattern.MULTILINE | Pattern.DOTALL);
-			this.emailText = emailText;
+		String content;
+		public regexCheck(Pattern p, String content) {
+			this.p = p;
+			this.content = content;
 		}
 
-		public List<String> call() throws Exception {
-			Matcher m = p.matcher(emailText);
-			List<String> matches = new ArrayList<String>();
-			while (m.find()){
-			    matches.add(m.group());
+		public Boolean call() throws Exception {
+			if (p.matcher(content).find()) {
+				return true;
 			}
-			return matches;
+			return false;
 		}
 	
 	}
@@ -60,43 +67,16 @@ public class EmailParser {
 	}
 	
 	public Email parse(String emailText) {
+		compileQuoteHeaderRegexes();
 		emailText.replace("\r\n", "\n");
-		regexCheckService = Executors.newCachedThreadPool();
-		for(String regex : quoteHeadersRegex) {
-			List<String> matches = new ArrayList<String>();
-			Future<List<String>> checkResult = null;
-			checkResult = regexCheckService.submit(new regexCheck(regex, emailText));
-			
-			try {
-				matches = checkResult.get(timeout, TimeUnit.MILLISECONDS);
-			} catch (TimeoutException ex) {
-				checkResult.cancel(true);
-				System.out.println("timeout");
-				timedoutRegexes.add(regex);
-			} catch (InterruptedException e) {
-				checkResult.cancel(true);
-				timedoutRegexes.add(regex);
-			} catch (ExecutionException e) {
-				checkResult.cancel(true);
-				timedoutRegexes.add(regex);
-			} finally {
-				if(checkResult.isDone() && !checkResult.isCancelled()) {
-					if (!matches.isEmpty()) {
-						String match = matches.get(0);
-						emailText = emailText.replace(matches.get(0), match.replace("\n", ""));
-					}
-				}
-			}
-			
-		}
 		
 		FragmentDTO fragment = null;
 		
 		String[] lines = new StringBuilder(emailText).reverse().toString().split("\n");
+		List<String> paragraph = new ArrayList<String>();
 		
 		for (String line : lines) {
 			line = StringUtils.stripEnd(line, "\n");
-			
 			if (!isSignature(line))
 				line = StringUtils.stripStart(line, null);
 			
@@ -109,12 +89,19 @@ public class EmailParser {
 					
 					fragment = null;
 				} 
+				else if (isMultiLineQuoteHeaders(paragraph)) {
+					fragment.isQuoted = true;
+					addFragment(fragment);
+					
+					fragment = null;
+				}
 				else if (isQuoteHeader(last)) {
 					fragment.isQuoted = true;
 					addFragment(fragment);
 					
 					fragment = null;
 				}
+				paragraph.clear();
 			}
 			
 			boolean isQuoted = isQuote(line);
@@ -128,6 +115,9 @@ public class EmailParser {
 				fragment.lines = new ArrayList<String>();
 			}
 			fragment.lines.add(line);	
+			if (!line.isEmpty()) {
+				paragraph.add(line);
+			}
 		}
 		
 		if (fragment != null)
@@ -169,11 +159,29 @@ public class EmailParser {
 	}
 		
 	private boolean isQuoteHeader(String line) {
-		for (String qhregex : quoteHeadersRegex) {
-			Pattern p = Pattern.compile(qhregex, Pattern.MULTILINE | Pattern.DOTALL);
-			Matcher m = p.matcher(new StringBuilder(line).reverse().toString());
-			if (m.find())
-				return true;
+		regexCheckService = Executors.newCachedThreadPool();
+		for(Pattern p : compiledQuoteHeaderPatterns) {
+			Boolean matches;
+			Future<Boolean> checkResult = null;
+			checkResult = regexCheckService.submit(new regexCheck(p, new StringBuilder(line).reverse().toString()));
+			
+			try {
+				matches = checkResult.get(timeout, TimeUnit.MILLISECONDS);
+				
+			} catch (TimeoutException ex) {
+				checkResult.cancel(true);
+				return false;
+			} catch (InterruptedException e) {
+				checkResult.cancel(true);
+				return false;
+			} catch (ExecutionException e) {
+				checkResult.cancel(true);
+				return false;
+			} 
+			if (matches) {
+				return matches;
+			}
+			
 		}
 		return false;
 	}
@@ -206,5 +214,37 @@ public class EmailParser {
 		fragments.add(fragment);
 	}
 	
-	
+	private boolean isMultiLineQuoteHeaders(List<String> paragraph) {
+		if (paragraph.size() > 6)
+			return false;
+		
+		String content = new StringBuilder(StringUtils.join(paragraph,"\n")).reverse().toString();
+		regexCheckService = Executors.newCachedThreadPool();
+		for(Pattern p : compiledQuoteHeaderPatterns) {
+			Boolean matches;
+			Future<Boolean> checkResult = null;
+			checkResult = regexCheckService.submit(new regexCheck(p, content));
+			
+			try {
+				matches = checkResult.get(timeout, TimeUnit.MILLISECONDS);
+				
+			} catch (TimeoutException ex) {
+				checkResult.cancel(true);
+				return false;
+			} catch (InterruptedException e) {
+				checkResult.cancel(true);
+				return false;
+			} catch (ExecutionException e) {
+				checkResult.cancel(true);
+				return false;
+			} 
+			if (matches) {
+				return matches;
+			}
+			
+		}
+		
+		return false;
+
+	}	
 }
