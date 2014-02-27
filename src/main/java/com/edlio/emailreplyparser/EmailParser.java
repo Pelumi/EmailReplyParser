@@ -42,7 +42,6 @@ public class EmailParser {
 	 * @return
 	 */
 	public Email parse(String emailText) {
-		emailText = emailText.replaceAll("\u2014", "------");
 		compileQuoteHeaderRegexes();
 		
 		// Normalize line endings
