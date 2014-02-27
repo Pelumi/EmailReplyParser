@@ -246,17 +246,18 @@ public class EmailParserTest {
 		
 		Email email = parser.parse(FixtureGetter.getFixture("email_abnormal_quote_header_3.txt"));
 		assertEquals(
-				"Hi Daniel,\n" + 
-				"\n" + 
-				"\n" + 
-				"Thank you very much for your email.\n" + 
-				"\n" + 
-				"Sincerely,\n" + 
-				"Homer Simpson\n" + 
-				"Nuclear Safety Inspector\n" + 
-				"\n" + 
-				"nuclear power plant, sector 7-G", 
-				email.getVisibleText());
+			"Hi Daniel,\n" + 
+			"\n" + 
+			"\n" + 
+			"Thank you very much for your email.\n" + 
+			"\n" + 
+			"Sincerely,\n" + 
+			"Homer Simpson\n" + 
+			"Nuclear Safety Inspector\n" + 
+			"\n" + 
+			"nuclear power plant, sector 7-G", 
+			email.getVisibleText()
+		);
 	}
 	
 	@Test
@@ -265,11 +266,12 @@ public class EmailParserTest {
 		
 		Email email = parser.parse(FixtureGetter.getFixture("email_abnormal_quote_header_4.txt"));
 		assertEquals(
-				"From: Homer Simpson\n" + 
-				"To: Support\n" + 
-				"\n" + 
-				"Thank you very much for your email!", 
-				email.getVisibleText());
+			"From: Homer Simpson\n" + 
+			"To: Support\n" + 
+			"\n" + 
+			"Thank you very much for your email!", 
+			email.getVisibleText()
+		);
 	}
 	
 	@Test
@@ -278,8 +280,9 @@ public class EmailParserTest {
 		
 		Email email = parser.parse(FixtureGetter.getFixture("email_abnormal_quote_header_5.txt"));
 		assertEquals(
-				"Hello from outlook.com!", 
-				email.getVisibleText());
+			"Hello from outlook.com!", 
+			email.getVisibleText()
+		);
 	}
 
 	@Test
@@ -288,8 +291,25 @@ public class EmailParserTest {
 		
 		Email email = parser.parse(FixtureGetter.getFixture("email_abnormal_quote_header_long.txt"));
 		assertEquals(
-				"*Caution* This is a really long email.",
-				email.getVisibleText());
+			"*Caution* This is a really long email.",
+			email.getVisibleText()
+		);
+	}
+	
+	@Test
+	public void testEmDashSignature() {
+		EmailParser parser = new EmailParser();
+		
+		Email email = parser.parse(FixtureGetter.getFixture("email_em_dash.txt"));
+		assertEquals("Thank you.", email.getVisibleText());
+	}
+	
+	@Test
+	public void testEnDashSignature() {
+		EmailParser parser = new EmailParser();
+		
+		Email email = parser.parse(FixtureGetter.getFixture("email_en_dash.txt"));
+		assertEquals("Thank you.", email.getVisibleText());
 	}
 
 }

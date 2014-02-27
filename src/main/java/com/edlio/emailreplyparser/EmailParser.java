@@ -13,7 +13,7 @@ import org.apache.commons.lang3.StringUtils;
 
 public class EmailParser {
 	
-	static final Pattern SIG_PATTERN = Pattern.compile("((^Sent from my (\\s*\\w+){1,3}$)|(^-\\w|__|--))", Pattern.DOTALL);
+	static final Pattern SIG_PATTERN = Pattern.compile( "((^Sent from my (\\s*\\w+){1,3}$)|(^-\\w|__|--|\u2013|\u2014))", Pattern.DOTALL);
 	static final Pattern QUOTE_PATTERN = Pattern.compile("(^>+)", Pattern.DOTALL);
 	private static List<Pattern> compiledQuoteHeaderPatterns;
 	
@@ -42,6 +42,7 @@ public class EmailParser {
 	 * @return
 	 */
 	public Email parse(String emailText) {
+		emailText = emailText.replaceAll("\u2014", "------");
 		compileQuoteHeaderRegexes();
 		
 		// Normalize line endings
@@ -60,7 +61,7 @@ public class EmailParser {
 		
 		/* Paragraph for multi-line quote headers.
 		 * Some clients break up the quote headers into multiple lines.
-	     */
+	         */
 		List<String> paragraph = new ArrayList<String>();
 		
 		// Scans the given email line by line and figures out which fragment it belong to.
@@ -85,7 +86,7 @@ public class EmailParser {
 					
 					fragment = null;
 				} 
-				else if (isMultiLineQuoteHeaders(paragraph)) {
+				else if (isQuoteHeader(paragraph)) {
 					fragment.isQuoted = true;
 					addFragment(fragment);
 					
@@ -241,7 +242,7 @@ public class EmailParser {
 	 * @return
 	 */
 	private boolean isFragmentLine(FragmentDTO fragment, String line, boolean isQuoted) {
-		return fragment.isQuoted == isQuoted || (fragment.isQuoted && (isMultiLineQuoteHeaders(Arrays.asList(line)) || line.isEmpty()));
+		return fragment.isQuoted == isQuoted || (fragment.isQuoted && (isQuoteHeader(Arrays.asList(line)) || line.isEmpty()));
 	}
 	
 	/**
@@ -256,14 +257,14 @@ public class EmailParser {
 	}
 	
 	/**
-	 * Checks if the given paragraph has one of the quote headers.
+	 * Checks if the given multiple-lines paragraph has one of the quote headers.
 	 * Returns false if it doesn't contain any of the quote headers, 
 	 * if paragraph lines are greater than maxParagraphLines, or line has more than maxNumberCharsEachLine characters.
 	 *   
 	 * @param paragraph
 	 * @return
 	 */
-	private boolean isMultiLineQuoteHeaders(List<String> paragraph) {
+	private boolean isQuoteHeader(List<String> paragraph) {
 		if (paragraph.size() > maxParagraphLines)
 			return false;
 		for (String line : paragraph) {
