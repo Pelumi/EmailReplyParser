@@ -240,7 +240,7 @@ public class EmailParserTest {
 		assertEquals(
 			"Thank you very much for your email!\n" + 
 			"\n" + 
-			"em—dash coming through..", 
+			"emódash coming through..", 
 			email.getVisibleText());
 	}
 	
@@ -273,7 +273,7 @@ public class EmailParserTest {
 			"From: Homer Simpson\n" + 
 			"To: Support\n" + 
 			"\n" + 
-			"En–dash coming through~\n" + 
+			"Enñdash coming through~\n" + 
 			"\n" + 
 			"Thank you very much for your email!", 
 			email.getVisibleText()
