@@ -1,0 +1,7 @@
+Hello from outlook.com!
+
+To: email@example.com
+From: support@example.com
+CC: email2@example.com; email3@example.com
+Subject: [Support] Re: Exmaple Subject
+Date: Wed, 19 Feb 2014 15:47:31 -0800

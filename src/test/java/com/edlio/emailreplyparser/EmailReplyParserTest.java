@@ -29,7 +29,7 @@ public class EmailReplyParserTest {
 				+ "RiakBucketInfo bucketInfo = bucketResponse.getBucketInfo();\n\n        for(String key : bucketInfo.getKeys()) "
 				+ "{\n            riakClient.delete(bucket, key);\n        }\n\n\nwould do it.\n\nSee also\n\nhttp://wiki.basho.com/REST-API.html#Bucket-operations\n\nwhich says\n\n"
 				+ "\"At the moment there is no straightforward way to delete an entire\nBucket. There is, however, an open ticket for the feature. To delete all\nthe keys in a bucket, "
-				+ "you’ll need to delete them all individually.\"", 
+				+ "you'll need to delete them all individually.\"", 
 				EmailReplyParser.parseReply(FixtureGetter.getFixture("email_2.txt")));
 	}
 
