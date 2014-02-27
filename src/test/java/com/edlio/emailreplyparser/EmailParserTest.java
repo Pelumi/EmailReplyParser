@@ -237,7 +237,11 @@ public class EmailParserTest {
 		EmailParser parser = new EmailParser();
 		
 		Email email = parser.parse(FixtureGetter.getFixture("email_abnormal_quote_header_2.txt"));
-		assertEquals("Thank you very much for your email!", email.getVisibleText());
+		assertEquals(
+			"Thank you very much for your email!\n" + 
+			"\n" + 
+			"em—dash coming through..", 
+			email.getVisibleText());
 	}
 	
 	@Test
@@ -268,6 +272,8 @@ public class EmailParserTest {
 		assertEquals(
 			"From: Homer Simpson\n" + 
 			"To: Support\n" + 
+			"\n" + 
+			"En–dash coming through~\n" + 
 			"\n" + 
 			"Thank you very much for your email!", 
 			email.getVisibleText()
