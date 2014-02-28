@@ -13,7 +13,7 @@ import org.apache.commons.lang3.StringUtils;
 
 public class EmailParser {
 	
-	static final Pattern SIG_PATTERN = Pattern.compile( "((^Sent from my (\\s*\\w+){1,3}$)|(^-\\w|__|--|^\u2013|^\u2014))", Pattern.DOTALL);
+	static final Pattern SIG_PATTERN = Pattern.compile( "((^Sent from my (\\s*\\w+){1,3}$)|(^-\\w|^\\s?__|^\\s?--|^\u2013|^\u2014))", Pattern.DOTALL);
 	static final Pattern QUOTE_PATTERN = Pattern.compile("(^>+)", Pattern.DOTALL);
 	private static List<Pattern> compiledQuoteHeaderPatterns;
 	
