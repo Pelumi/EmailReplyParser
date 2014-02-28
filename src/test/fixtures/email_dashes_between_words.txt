@@ -1,0 +1,7 @@
+The text below is not a signature!
+
+Parsing works correctly with mulit--dash between the words.
+
+This__also!
+
+--Daniel

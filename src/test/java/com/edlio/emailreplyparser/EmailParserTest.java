@@ -318,4 +318,20 @@ public class EmailParserTest {
 		assertEquals("Thank you.", email.getVisibleText());
 	}
 
+	@Test
+	public void testDashesBetweenWords() {
+		EmailParser parser = new EmailParser();
+		
+		Email email = parser.parse(FixtureGetter.getFixture("email_dashes_between_words.txt"));
+		assertEquals(
+			"The text below is not a signature!\n" + 
+			"\n" + 
+			"Parsing works correctly with mulit--dash between the words.\n" +
+			"\n" +
+			"This__also!", 
+			email.getVisibleText()
+		);
+	}
+	
+
 }
